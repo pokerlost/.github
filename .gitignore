@@ -1,0 +1,9 @@
+.aws
+.agents/
+.codex/
+.serena/
+.local/
+.env
+.env.*
+backups/
+/core.[0-9]*
