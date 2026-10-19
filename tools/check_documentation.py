@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
-"""Validate the generated Markdown documentation contract with the standard library."""
+"""Validate the generated Markdown documentation contract."""
 
 from __future__ import annotations
 
-import argparse
 import re
 import sys
 from collections import defaultdict
 from pathlib import Path
+from typing import Annotated, cast
 from urllib.parse import unquote, urlsplit
+
+import typer
+
+app = typer.Typer(
+    help=__doc__,
+    pretty_exceptions_show_locals=False,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 
 _FENCE_PATTERN = re.compile(r"^\s{0,3}(`{3,}|~{3,})(.*)$")
 _HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
@@ -525,49 +533,27 @@ def _is_ignored_document(path: Path, repository_root: Path) -> bool:
     return any(part in _IGNORED_DIRECTORY_NAMES for part in relative_parts)
 
 
-def _parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--documents",
-        nargs="+",
-        type=Path,
-        help="Check an explicit Markdown set without index reachability validation.",
-    )
-    parser.add_argument(
-        "--docs-dir",
-        type=Path,
-        default=Path("docs"),
-        help="Generated documentation directory (default: docs).",
-    )
-    parser.add_argument(
-        "--index",
-        type=Path,
-        default=None,
-        help="Documentation index (default: <docs-dir>/index.md).",
-    )
-    return parser.parse_args()
-
-
-def main() -> int:
-    """Run documentation validation and return a process exit status."""
-    arguments = _parse_arguments()
+def check_documents(
+    documents: list[Path] | None, docs_dir: Path, selected_index: Path | None
+) -> int:
+    """Validate paths independently of command-line parsing."""
     repository_root = Path.cwd().resolve()
     errors: list[str] = []
 
-    if arguments.documents:
+    if documents:
         document_paths = [
             path.resolve() if path.is_absolute() else (repository_root / path).resolve()
-            for path in arguments.documents
+            for path in documents
         ]
         index = None
         docs_directory = None
     else:
         docs_directory = (
-            arguments.docs_dir.resolve()
-            if arguments.docs_dir.is_absolute()
-            else (repository_root / arguments.docs_dir).resolve()
+            docs_dir.resolve()
+            if docs_dir.is_absolute()
+            else (repository_root / docs_dir).resolve()
         )
-        index_argument = arguments.index or arguments.docs_dir / "index.md"
+        index_argument = selected_index or docs_dir / "index.md"
         index = (
             index_argument.resolve()
             if index_argument.is_absolute()
@@ -618,5 +604,27 @@ def main() -> int:
     return 0
 
 
+@app.command(name="check")
+def check(
+    documents: Annotated[
+        Path | None, typer.Option("--documents", help="Explicit Markdown files.")
+    ] = None,
+    remaining_documents: Annotated[
+        list[Path] | None, typer.Argument(help="More files after --documents.")
+    ] = None,
+    docs_dir: Annotated[Path, typer.Option("--docs-dir")] = Path("docs"),
+    index: Annotated[Path | None, typer.Option("--index")] = None,
+) -> None:
+    if remaining_documents and documents is None:
+        raise typer.BadParameter("Extra document paths require --documents.")
+    paths = [documents, *(remaining_documents or [])] if documents else None
+    raise typer.Exit(check_documents(paths, docs_dir, index))
+
+
+def main() -> int:
+    """Retain the callable exit-status interface for existing consumers."""
+    return cast(int, app(standalone_mode=False))
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    app()

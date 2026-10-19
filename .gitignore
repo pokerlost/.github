@@ -11,3 +11,4 @@ backups/
 # Generated Docker verification reports.
 coverage/
 dist/
+.vscode/
