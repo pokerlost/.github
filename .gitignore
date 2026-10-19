@@ -1,0 +1,14 @@
+.aws
+.agents/
+.codex/
+.serena/
+.local/
+.env
+.env.*
+backups/
+/core.[0-9]*
+
+# Generated Docker verification reports.
+coverage/
+dist/
+.vscode/

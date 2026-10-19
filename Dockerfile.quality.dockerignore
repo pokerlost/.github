@@ -1,0 +1,14 @@
+.git
+.aws
+.agents
+.codex
+.serena
+.local
+.env
+.env.*
+.venv
+**/__pycache__
+coverage
+dist
+backups
+.vscode/

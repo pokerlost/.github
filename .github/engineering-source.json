@@ -1,0 +1,34 @@
+{
+  "repository": "https://github.com/serrja/pythonTemplate",
+  "revision": "0eecd2b2660dde52b94be45b48ae11640ce0ac1c",
+  "role": "Reviewed portable engineering snapshots; no active scaffold restoration or template-update dependency.",
+  "files": {
+    ".github/workflows/contribution.yml": {
+      "source": "template/.github/workflows/contribution.yml",
+      "sha256": "5ffc172c7c0881ae18e7243ee718dcc2693922f4864cafd73ab895054e30d272"
+    },
+    "docker/quality.mk": {
+      "source": "template/docker/quality.mk",
+      "sha256": "881cd3677effdf37503bd4c1980c0ce11403a6306bb8cdb2974779ff601fa6a4"
+    },
+    "tools/check_documentation.py": {
+      "source": "tools/check_documentation.py",
+      "sha256": "3cd134518cd4f126d911e98c92122d1f9187fe0eaeba37a78349cb191589f4c0"
+    },
+    ".github/ISSUE_TEMPLATE/bug.yml": {
+      "source": "template/.github/ISSUE_TEMPLATE/bug.yml",
+      "sha256": "78feef33d31062d539661a94b267c683934e5c497cda7ee075c2f2f00a49a4b6"
+    },
+    ".github/ISSUE_TEMPLATE/feature.yml": {
+      "source": "template/.github/ISSUE_TEMPLATE/feature.yml",
+      "sha256": "0b80a1e2b30ffc501f321a38b0c60396f309eb73e8aeff0c3a45710009dd23bd"
+    },
+    ".github/PULL_REQUEST_TEMPLATE.md": {
+      "source": "template/.github/PULL_REQUEST_TEMPLATE.md.jinja",
+      "sha256": "ace4038d79b02d6aacf779739ae7c9bd7179fbf9e57d5e2d1d14e08466858544"
+    }
+  },
+  "rules": {
+    "engineering": "https://github.com/serrja/pythonTemplate/blob/main/docs/engineering.md"
+  }
+}
