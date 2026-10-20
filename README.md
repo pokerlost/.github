@@ -12,3 +12,9 @@ Supported community defaults are [contributing](CONTRIBUTING.md), [security](SEC
 files override defaults. GitHub does not inherit workflows, CODEOWNERS, licenses, branch
 protection, secrets or repository settings from this repository; those are configured and
 verified per repository. The public profile makes no claim about private service readiness.
+
+## 📄 License
+
+Original source/documentation uses [MIT](LICENSE). Preserve the
+[third-party notices](THIRD_PARTY_NOTICES.md); upstream assets, distributions and
+private data retain their own terms and access boundaries.
