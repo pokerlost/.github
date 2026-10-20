@@ -20,6 +20,8 @@ IMAGE_COMMAND ?= $(DOCKER) buildx build $(DOCKER_BUILD_ARGS) $(LOCAL_BUILD_NETWO
 VERIFY_COMMAND ?= $(MAKE) verify-installed
 QUALITY_EXTRA_TARGETS ?=
 CI_LOCAL_TARGETS ?= check coverage build verify release-check
+# An explicit environment/command-line subset is evidence for that scope only.
+CI_LOCAL_SCOPE = $(if $(filter command line environment override,$(origin CI_LOCAL_TARGETS)),scoped,full)
 OFFLINE_PREFLIGHT_COMMAND ?= sh -ec 'echo "BLOCKED: declare the repository-specific cached artifact/acceptance inputs before offline CI." >&2; exit 2'
 OFFLINE ?= 0
 SKIP_QUALITY_BUILD ?= 0
@@ -98,16 +100,22 @@ release-check: quality-image ## Validate versions and built artifacts; never pub
 ci-local: ## Run ordered native targets once and preserve a receipt even on failure.
 	@mkdir -p "$(REPORT_DIR)" dist
 	@rm -f $(REPORT_DIR)/ci-local.json $(REPORT_DIR)/artifacts.json $(REPORT_DIR)/versions.json
-	@printf '%s\n' '{"schemaVersion":1,"source":null,"status":"blocked","checks":[],"artifacts":[],"tools":{},"reason":"Source identity or native receipt unavailable"}' > $(REPORT_DIR)/ci-local.json
+	@set -eu; plan_checks=''; separator=''; \
+	  for target in $(CI_LOCAL_TARGETS); do \
+	    case "$$target" in ''|*[!a-zA-Z0-9_.:-]*) echo 'Invalid CI target name' >&2; exit 2;; esac; \
+	    plan_checks="$$plan_checks$$separator\"$$target\""; separator=,; \
+	  done; \
+	  printf '{"scope":"%s","checks":[%s]}\n' '$(CI_LOCAL_SCOPE)' "$$plan_checks" > $(REPORT_DIR)/ci-plan.json
+	@printf '%s\n' '{"schemaVersion":1,"source":null,"scope":"$(CI_LOCAL_SCOPE)","status":"blocked","checks":[],"artifacts":[],"tools":{},"reason":"Source identity or native receipt unavailable"}' > $(REPORT_DIR)/ci-local.json
 	@set -eu; \
 	  bash docker/source_identity.sh "$(REPORT_DIR)/source.json"; \
-	  printf '{"schemaVersion":1,"source":%s,"status":"blocked","checks":[],"artifacts":[],"tools":{},"reason":"Native preparation or receipt unavailable"}\n' "$$(cat $(REPORT_DIR)/source.json)" > $(REPORT_DIR)/ci-local.json; \
-	  command -v $(firstword $(DOCKER)) >/dev/null && $(DOCKER) info >/dev/null 2>&1 || { printf '%s\n' 'BLOCKED: Docker/daemon unavailable.' > $(REPORT_DIR)/ci-local-summary.md; exit 2; }; \
+	  printf '{"schemaVersion":1,"source":%s,"scope":"$(CI_LOCAL_SCOPE)","status":"blocked","checks":[],"artifacts":[],"tools":{},"reason":"Native preparation or receipt unavailable"}\n' "$$(cat $(REPORT_DIR)/source.json)" > $(REPORT_DIR)/ci-local.json; \
+	  command -v $(firstword $(DOCKER)) >/dev/null && $(DOCKER) info >/dev/null 2>&1 || { printf '%s\n' 'BLOCKED: Docker/daemon unavailable. Scope: $(CI_LOCAL_SCOPE).' > $(REPORT_DIR)/ci-local-summary.md; exit 2; }; \
 	  code=0; $(MAKE) --no-print-directory quality-image || code=$$?; \
 	  if test "$$code" -ne 0; then \
 	    state=failed; if test "$(OFFLINE)" = 1; then state=blocked; fi; \
-	    printf '{"schemaVersion":1,"source":%s,"status":"%s","checks":[{"name":"prepare","command":"make quality-image","status":"%s","exitCode":%s}],"artifacts":[],"tools":{}}\n' "$$(cat $(REPORT_DIR)/source.json)" "$$state" "$$state" "$$code" > $(REPORT_DIR)/ci-local.json; \
-	    printf 'Quality image preparation: %s (exit %s).\n' "$$state" "$$code" > $(REPORT_DIR)/ci-local-summary.md; exit "$$code"; \
+	    printf '{"schemaVersion":1,"source":%s,"scope":"$(CI_LOCAL_SCOPE)","status":"%s","checks":[{"name":"prepare","command":"make quality-image","status":"%s","exitCode":%s}],"artifacts":[],"tools":{}}\n' "$$(cat $(REPORT_DIR)/source.json)" "$$state" "$$state" "$$code" > $(REPORT_DIR)/ci-local.json; \
+	    printf 'Quality image preparation: %s (exit %s). Scope: $(CI_LOCAL_SCOPE).\n' "$$state" "$$code" > $(REPORT_DIR)/ci-local-summary.md; exit "$$code"; \
 	  fi; \
 	  $(DOCKER) image inspect $(QUALITY_IMAGE) --format '{{.Id}}' > $(REPORT_DIR)/quality-image-id.txt; \
 	  $(RECEIPT_COMMAND) init; \

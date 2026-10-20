@@ -9,8 +9,8 @@
     },
     "docker/quality.mk": {
       "source": "template/docker/quality.mk",
-      "sha256": "5da1c65ef9610cb28bf0652e908ec785c2cb37d677d1995856c28a292785eb85",
-      "revision": "1aaab606373980a6084ae1a69069280241fb27de"
+      "sha256": "2d84bce3b5425d78778ef45ebb49d49d64a5932833eb2ced170617663fddae40",
+      "revision": "2f416c3cdfc011dc36f9fbcca0420ecbf2f1ad37"
     },
     "tools/check_documentation.py": {
       "source": "tools/check_documentation.py",
@@ -35,8 +35,8 @@
     },
     "docker/release.py": {
       "source": "template/docker/release.py",
-      "sha256": "2362df1b29d3a3f458d4adbaf6f1baeed7f93ca0f63959cc036f19763fead02e",
-      "revision": "1aaab606373980a6084ae1a69069280241fb27de"
+      "sha256": "58b6be3339bc8174d0a1adeacd93abe605506410881aee1a959511575df1dfd7",
+      "revision": "2f416c3cdfc011dc36f9fbcca0420ecbf2f1ad37"
     },
     "docker/documentation-requirements.in": {
       "source": "docker/documentation-requirements.in",
@@ -52,5 +52,5 @@
   "rules": {
     "engineering": "https://github.com/serrja/pythonTemplate/blob/main/docs/engineering.md"
   },
-  "latestUpdateRevision": "1aaab606373980a6084ae1a69069280241fb27de"
+  "latestUpdateRevision": "2f416c3cdfc011dc36f9fbcca0420ecbf2f1ad37"
 }

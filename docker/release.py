@@ -15,12 +15,12 @@ from datetime import UTC, datetime
 from email.parser import BytesParser
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import typer
 from packaging.utils import canonicalize_name
 from packaging.version import Version
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 receipt_app = typer.Typer(pretty_exceptions_show_locals=False)
@@ -52,10 +52,35 @@ class Artifact(BaseModel):
     version: str
 
 
+class Plan(BaseModel):
+    """The Make-owned ordered gate distinguishes full from explicit scoped runs."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    scope: Literal["full", "scoped"]
+    checks: list[str] = Field(min_length=1)
+
+    @field_validator("checks")
+    @classmethod
+    def unique_targets(cls, targets: list[str]) -> list[str]:
+        if len(set(targets)) != len(targets) or any(
+            not target
+            or target == "offline-preflight"
+            or any(
+                not (char.isascii() and (char.isalnum() or char in "_.:-"))
+                for char in target
+            )
+            for target in targets
+        ):
+            raise ValueError("Planned checks must be unique native Make target names")
+        return targets
+
+
 class Receipt(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, populate_by_name=True)
     schema_version: int = Field(default=1, alias="schemaVersion")
     source: Source
+    scope: Literal["full", "scoped"]
+    planned_checks: list[str] = Field(alias="plannedChecks")
     status: str
     started_at: str = Field(alias="startedAt")
     finished_at: str | None = Field(default=None, alias="finishedAt")
@@ -91,6 +116,10 @@ def source() -> Source:
     return Source.model_validate_json((REPORTS / "source.json").read_text())
 
 
+def plan() -> Plan:
+    return Plan.model_validate_json((REPORTS / "ci-plan.json").read_text())
+
+
 def read_receipt() -> Receipt:
     return Receipt.model_validate_json((REPORTS / "ci-local.json").read_text())
 
@@ -115,9 +144,17 @@ def tool_versions() -> dict[str, str]:
 @receipt_app.command("init")
 def receipt_init() -> None:
     """Start a receipt for the current source; never reuse a previous PASS."""
+    selected = plan()
     save_receipt(
-        Receipt(
-            source=source(), status="running", startedAt=now(), tools=tool_versions()
+        Receipt.model_validate(
+            {
+                "source": source(),
+                "scope": selected.scope,
+                "plannedChecks": selected.checks,
+                "status": "running",
+                "startedAt": now(),
+                "tools": tool_versions(),
+            }
         )
     )
 
@@ -132,12 +169,26 @@ def receipt_record(
     value = read_receipt()
     if value.status != "running" or any(check.name == name for check in value.checks):
         raise typer.BadParameter("Receipt is finished or check already recorded")
+    if not 0 <= exit_code <= 255:
+        raise typer.BadParameter("Exit code must be between 0 and 255")
+    recorded = [check.name for check in value.checks]
+    if name == "offline-preflight":
+        if recorded:
+            raise typer.BadParameter("Offline preflight must be the first check")
+    else:
+        completed = [item for item in recorded if item != "offline-preflight"]
+        if [*completed, name] != value.planned_checks[: len(completed) + 1]:
+            raise typer.BadParameter("Check is not the next planned native target")
     value.checks.append(
-        Check(
-            name=name,
-            command=command,
-            exitCode=exit_code,
-            status="passed" if exit_code == 0 else "failed",
+        Check.model_validate(
+            {
+                "name": name,
+                "command": command,
+                "exitCode": exit_code,
+                "status": "passed"
+                if exit_code == 0
+                else ("blocked" if exit_code == 3 else "failed"),
+            }
         )
     )
     save_receipt(value)
@@ -172,10 +223,22 @@ def receipt_finish(status: Annotated[Status, typer.Option()]) -> None:
     try:
         if value.status != "running" or value.source != source():
             raise ValueError("Source changed during ci-local or receipt already ended")
+        selected = plan()
+        if selected.scope != value.scope or selected.checks != value.planned_checks:
+            raise ValueError("CI plan changed during execution")
+        completed = [
+            check.name for check in value.checks if check.name != "offline-preflight"
+        ]
         if status == Status.passed and (
-            not value.checks or any(check.exit_code != 0 for check in value.checks)
+            completed != value.planned_checks
+            or any(
+                check.exit_code != 0 or check.status != "passed"
+                for check in value.checks
+            )
         ):
-            raise ValueError("A failed or missing check cannot become PASS")
+            raise ValueError(
+                "A failed, skipped or missing planned check cannot become PASS"
+            )
         value.artifacts = checked_artifacts()
         versions = REPORTS / "versions.json"
         if versions.is_file():
@@ -193,7 +256,10 @@ def receipt_finish(status: Annotated[Status, typer.Option()]) -> None:
     summary = [
         "# Local CI",
         "",
-        f"Status: **{value.status}**",
+        f"Status: **{value.status}**; scope: **{value.scope}**.",
+        "Planned checks: "
+        + ", ".join(f"`{name}`" for name in value.planned_checks)
+        + ".",
         f"Source commit: `{value.source.commit}`; dirty: `{value.source.dirty}`.",
         f"Content SHA-256: `{value.source.content_sha256}`.",
         "",
