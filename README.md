@@ -2,10 +2,12 @@
 
 GitHub renders [profile/README.md](profile/README.md) on the Pokerlost organization page. Keep this public page limited to facts approved for public display. The detailed component overview belongs to a separate private repository.
 
-From this exact Git root, `make check` runs whitespace and Markdown/link checks in Docker.
-`make coverage` reads that fresh result without rerunning checks. Coverage, distributions and
-runtime acceptance are `notApplicable` for this documentation repository. Git, Make and Docker
-suffice; no application SDK is needed.
+From this exact Git root, `make ci-local` checks Markdown/links once, builds a versioned
+source bundle and verifies its bytes. `make version` reads [VERSION](VERSION);
+`make coverage` reports the current documentation result without rerunning checks.
+Git, Make and Docker suffice; product runtime coverage and deployment are not applicable.
+See [development](docs/development.md), [versioning](docs/versioning.md) and
+[release workflow](docs/release-guide.md). Reports stay in ignored `coverage/`.
 
 Supported community defaults are [contributing](CONTRIBUTING.md), [security](SECURITY.md),
 [support](SUPPORT.md), [PR template](.github/PULL_REQUEST_TEMPLATE.md) and issue forms. Component-local

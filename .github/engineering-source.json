@@ -9,7 +9,8 @@
     },
     "docker/quality.mk": {
       "source": "template/docker/quality.mk",
-      "sha256": "881cd3677effdf37503bd4c1980c0ce11403a6306bb8cdb2974779ff601fa6a4"
+      "sha256": "31f2a873741ca440de1d021e7c767dc0069c56c62ce6b859b944cc437ce098c1",
+      "revision": "b95e247bc59123decdb02e4db6d98fa761b69786"
     },
     "tools/check_documentation.py": {
       "source": "tools/check_documentation.py",
@@ -26,9 +27,30 @@
     ".github/PULL_REQUEST_TEMPLATE.md": {
       "source": "template/.github/PULL_REQUEST_TEMPLATE.md.jinja",
       "sha256": "ace4038d79b02d6aacf779739ae7c9bd7179fbf9e57d5e2d1d14e08466858544"
+    },
+    "docker/source_identity.sh": {
+      "source": "template/docker/source_identity.sh",
+      "sha256": "efe087bf133fc2c4c9a02ee4a3935e77d4a39ded3b14387c3dde0d90ef25ecc7",
+      "revision": "1aaab606373980a6084ae1a69069280241fb27de"
+    },
+    "docker/release.py": {
+      "source": "template/docker/release.py",
+      "sha256": "345b82b5036b8ac162778ba69af20cf1d45e2ccc28038a168f2b6882de9587a3",
+      "revision": "b95e247bc59123decdb02e4db6d98fa761b69786"
+    },
+    "docker/documentation-requirements.in": {
+      "source": "docker/documentation-requirements.in",
+      "sha256": "74ba5f8648a75c0141c74cc2dccc11c9814c7e1b1740955741304e5515b7adb5",
+      "revision": "1aaab606373980a6084ae1a69069280241fb27de"
+    },
+    "docker/documentation-requirements.lock": {
+      "source": "docker/documentation-requirements.lock",
+      "sha256": "7322b32ce1b7b6fce30ef767ed9d7fec5ffac98eee65163e1896bee1a1365428",
+      "revision": "1aaab606373980a6084ae1a69069280241fb27de"
     }
   },
   "rules": {
     "engineering": "https://github.com/serrja/pythonTemplate/blob/main/docs/engineering.md"
-  }
+  },
+  "latestUpdateRevision": "b95e247bc59123decdb02e4db6d98fa761b69786"
 }

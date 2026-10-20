@@ -1,2 +1,4 @@
 # Maintenance CLI only; no product Python runtime in documentation repositories.
 typer==0.27.3
+pydantic>=2.12,<3
+packaging>=25,<27
