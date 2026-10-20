@@ -41,8 +41,8 @@ class Check(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, populate_by_name=True)
     name: str
     command: str
-    status: str
-    exit_code: int = Field(alias="exitCode")
+    status: Literal["passed", "failed", "blocked"]
+    exit_code: int = Field(alias="exitCode", ge=0, le=255)
 
 
 class Artifact(BaseModel):
@@ -77,11 +77,11 @@ class Plan(BaseModel):
 
 class Receipt(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, populate_by_name=True)
-    schema_version: int = Field(default=1, alias="schemaVersion")
+    schema_version: Literal[1] = Field(default=1, alias="schemaVersion")
     source: Source
     scope: Literal["full", "scoped"]
     planned_checks: list[str] = Field(alias="plannedChecks")
-    status: str
+    status: Literal["running", "passed", "failed", "blocked"]
     started_at: str = Field(alias="startedAt")
     finished_at: str | None = Field(default=None, alias="finishedAt")
     checks: list[Check] = Field(default_factory=list)
@@ -198,9 +198,10 @@ def checked_artifacts() -> list[Artifact]:
     manifest = REPORTS / "artifacts.json"
     if not manifest.is_file():
         return []
-    artifacts = [
-        Artifact.model_validate(item) for item in json.loads(manifest.read_text())
-    ]
+    items = json.loads(manifest.read_text())
+    if not isinstance(items, list):
+        raise ValueError("Artifact inventory must be a list")
+    artifacts = [Artifact.model_validate(item) for item in items]
     for artifact in artifacts:
         path = Path(artifact.path)
         if (
@@ -239,10 +240,25 @@ def receipt_finish(status: Annotated[Status, typer.Option()]) -> None:
             raise ValueError(
                 "A failed, skipped or missing planned check cannot become PASS"
             )
-        value.artifacts = checked_artifacts()
+        release_verified = any(
+            check.name == "release-check" and check.exit_code == 0
+            for check in value.checks
+        )
+        value.artifacts = checked_artifacts() if release_verified else []
+        if (
+            status == Status.passed
+            and "release-check" in value.planned_checks
+            and not value.artifacts
+        ):
+            raise ValueError(
+                "Release verification requires a nonempty current artifact inventory"
+            )
         versions = REPORTS / "versions.json"
-        if versions.is_file():
-            value.versions = json.loads(versions.read_text())
+        if release_verified and versions.is_file():
+            metadata = json.loads(versions.read_text())
+            if not isinstance(metadata, dict):
+                raise ValueError("Version inventory must be an object")
+            value.versions = metadata
         for name in ("coverage.json", "coverage.xml", "junit.xml", "summary.md"):
             path = REPORTS / name
             if path.is_file():

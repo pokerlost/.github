@@ -12,6 +12,7 @@ QUALITY_GIT_MOUNT = $(if $(wildcard $(CURDIR)/.git/HEAD),--mount "type=bind$(COM
 QUALITY_DIST_MOUNT ?= --mount "type=bind,source=$(CURDIR)/dist,target=/app/dist"
 QUALITY_BUILD_ARGS ?= $(DOCKER_BUILD_ARGS)
 QUALITY_TEST ?= test
+QUALITY_TEST_COMMAND ?= $(QUALITY_RUN) make $(QUALITY_TEST)
 ARTIFACT_TARGET ?= artifacts
 BUILD_DOCKERFILE ?= Dockerfile
 BUILD_COMMAND ?= $(DOCKER) buildx build --file $(BUILD_DOCKERFILE) $(DOCKER_BUILD_ARGS) $(LOCAL_BUILD_NETWORK) --target $(ARTIFACT_TARGET) --output type=local,dest=dist .
@@ -73,7 +74,7 @@ test-unit: test ## Compatibility name; runs the canonical suite once.
 test: quality-image source-identity ## Fresh execution after cached image restoration.
 	@rm -f $(REPORT_DIR)/test-image-id.txt $(REPORT_DIR)/test-source.json
 	@touch $(REPORT_DIR)/.started
-	$(QUALITY_RUN) make $(QUALITY_TEST)
+	$(QUALITY_TEST_COMMAND)
 	$(QUALITY_RUN) $(COVERAGE_COMMAND)
 	@$(DOCKER) image inspect $(QUALITY_IMAGE) --format '{{.Id}}' > $(REPORT_DIR)/test-image-id.txt
 	@cp $(REPORT_DIR)/source.json $(REPORT_DIR)/test-source.json
