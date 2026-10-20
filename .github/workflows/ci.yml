@@ -27,5 +27,5 @@ jobs:
           tags: community:quality
           cache-from: type=gha,scope=${{ github.repository_id }}-docs-linux-amd64-${{ github.event_name == 'pull_request' && 'review' || 'trusted' }}
           cache-to: type=gha,mode=max,scope=${{ github.repository_id }}-docs-linux-amd64-${{ github.event_name == 'pull_request' && 'review' || 'trusted' }}
-      - run: make check
+      - run: make ci-local
       - run: cat coverage/summary.md >> "$GITHUB_STEP_SUMMARY"
