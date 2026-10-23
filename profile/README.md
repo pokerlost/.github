@@ -2,14 +2,35 @@
 
 # Pokerlost
 
-An independent poker software project in development: a C++20 rules engine with a Python interface, typed integrations and a shared Flutter game view for the web.
+Poker libraries, service foundations and web clients, built around an authoritative
+C++ engine with a Python API.
 
-The project is not a production poker or payment service. Source repositories are currently private; this page describes the project without exposing internal architecture.
+[Public repositories](https://github.com/orgs/pokerlost/repositories?type=public)
 
-Browse the [available repositories](https://github.com/orgs/pokerlost/repositories) for material you can access. Implementation, tests and delivery claims belong to the relevant source revision and its reports.
+## ♠️ Try PokerDemo
 
-Read the [real two-player engine recording](https://github.com/serrja/serrja/blob/main/docs/engine_demo.md): synthetic public views, native settlement and byte-exact terminal captures. The local example has no network authentication/TLS and is not a production service.
+A WebSocket server and two interactive terminal tables: cards, shared board,
+legal-action buttons and a bet picker. PokerEngine validates actions and settles
+the hand.
 
-Public conventions: [engineering and portable knowledge templates](https://github.com/serrja/baseRules) · [safe Pokerlost project rules](https://github.com/pokerlost/projectRules). These pages contain no private deployment configuration.
+![PokerDemo: own cards, a shared board and a bet picker](https://raw.githubusercontent.com/pokerlost/pokerDemo/main/docs/assets/demo.gif)
 
-Original profile documentation and owned assets use [MIT](../LICENSE); preserve the [third-party notices](../THIRD_PARTY_NOTICES.md).
+[Recording provenance](https://github.com/pokerlost/pokerDemo/blob/main/docs/assets/demo.json).
+
+[Source and quick start](https://github.com/pokerlost/pokerDemo#quick-start) ·
+[Play and record a game](https://github.com/pokerlost/pokerDemo/blob/main/docs/demo.md)
+
+```bash
+make demo              # play with two terminal clients
+make demo-record-open  # record a hand and open the GIF
+```
+
+Run these from the prepared PokerDemo checkout; follow the quick start to install
+its dependencies first.
+
+The demo uses synthetic players and chips on loopback. It needs the separately
+supplied CPython 3.14 Linux wheel and has no production authentication, TLS or
+persistence. Product services and production deployment are still in development.
+
+Original profile documentation and owned assets use [MIT](../LICENSE); preserve
+the [third-party notices](../THIRD_PARTY_NOTICES.md).
