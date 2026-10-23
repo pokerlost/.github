@@ -1,5 +1,10 @@
 # Development
 
+Daily policy: use `dev`, run `make lint`, inspect the staged diff, then explicitly
+`git push origin dev`. `main` and `test` are preserved. Test, typecheck, build,
+coverage and full acceptance commands below are manual. New manual Actions in
+`dev` may require a later authorized default-branch activation.
+
 This repository owns the `pokerlost-community` documentation bundle. Use Git, Make,
 Docker and Buildx from its exact root; no application SDK or runtime is required.
 
