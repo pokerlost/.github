@@ -13,9 +13,9 @@ Configure force-push/deletion protection, actual required job names and reviews 
 each consumer. This provider cannot configure or bypass a consumer's protections.
 The reusable promotion job validates event fields without checking out PR source.
 
-Review the complete provider diff, tests and release evidence, then replace both
-`REVIEWED_FULL_SHA` markers below with the same real 40-character commit. The fragment
-is demonstrative, not an active workflow or a claim that H02 has been accepted.
+The example pins the reviewed v0.3.0 provider source. Before an update, review the
+complete provider diff, tests and release evidence; keep the workflow ref and provider-ref
+identical. The native job is demonstrative and needs the consumer's real checkout/setup/checks.
 
 ```yaml
 on:
@@ -28,7 +28,7 @@ permissions:
 jobs:
   promotion:
     if: github.event_name == 'pull_request'
-    uses: pokerlost/.github/.github/workflows/promotion.yml@REVIEWED_FULL_SHA
+    uses: pokerlost/.github/.github/workflows/promotion.yml@637ff1b505b0b9fb54847d46927a9596b1ebc967
   native:
     runs-on: ubuntu-24.04
     steps:
@@ -40,9 +40,9 @@ jobs:
     permissions:
       contents: write
       actions: read
-    uses: pokerlost/.github/.github/workflows/release.yml@REVIEWED_FULL_SHA
+    uses: pokerlost/.github/.github/workflows/release.yml@637ff1b505b0b9fb54847d46927a9596b1ebc967
     with:
-      provider-ref: REVIEWED_FULL_SHA
+      provider-ref: 637ff1b505b0b9fb54847d46927a9596b1ebc967
       native-adapter: npm
       bundle-name: example-policy
       source-workflow: .github/workflows/ci.yml
