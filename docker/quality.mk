@@ -8,7 +8,12 @@ QUALITY_IMAGE ?= project:quality
 QUALITY_NETWORK ?= none
 QUALITY_RUN_ARGS ?=
 COMMA := ,
-QUALITY_GIT_MOUNT = $(if $(wildcard $(CURDIR)/.git/HEAD),--mount "type=bind$(COMMA)source=$(CURDIR)/.git$(COMMA)target=/app/.git$(COMMA)readonly",$(if $(wildcard $(CURDIR)/.git),--mount "type=bind$(COMMA)source=$(shell git rev-parse --absolute-git-dir)$(COMMA)target=/app/.git$(COMMA)readonly" --mount "type=bind$(COMMA)source=$(shell git rev-parse --path-format=absolute --git-common-dir)$(COMMA)target=/app/.git-common$(COMMA)readonly" --env GIT_COMMON_DIR=/app/.git-common --env GIT_WORK_TREE=/app,))
+# Keep commondir-relative paths intact for Git versions shipped by quality images.
+# The single canonical .git mount is also excluded from source-bundle inventories.
+QUALITY_GIT_HOST_DIR := $(shell git rev-parse --absolute-git-dir 2>/dev/null)
+QUALITY_GIT_HOST_COMMON := $(shell git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+QUALITY_GIT_CONTAINER_DIR = /app/.git$(if $(filter $(QUALITY_GIT_HOST_COMMON),$(QUALITY_GIT_HOST_DIR)),,/$(patsubst $(QUALITY_GIT_HOST_COMMON)/%,%,$(QUALITY_GIT_HOST_DIR)))
+QUALITY_GIT_MOUNT = $(if $(wildcard $(CURDIR)/.git),--mount "type=bind$(COMMA)source=$(QUALITY_GIT_HOST_COMMON)$(COMMA)target=/app/.git$(COMMA)readonly" --env GIT_DIR=$(QUALITY_GIT_CONTAINER_DIR) --env GIT_WORK_TREE=/app,)
 QUALITY_DIST_MOUNT ?= --mount "type=bind,source=$(CURDIR)/dist,target=/app/dist"
 QUALITY_BUILD_ARGS ?= $(DOCKER_BUILD_ARGS)
 QUALITY_TEST ?= test

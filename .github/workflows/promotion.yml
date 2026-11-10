@@ -1,0 +1,26 @@
+name: Reusable promotion guard
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  promotion:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Validate branch route without executing PR code
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
+        run: |
+          set -euo pipefail
+          [[ "$BASE_REPO" == "$GITHUB_REPOSITORY" ]]
+          case "$BASE_REF" in
+            test) [[ "$HEAD_REF" =~ ^[a-z][A-Za-z0-9]*$ && ! "$HEAD_REF" =~ ^(test|dev|main)$ ]] ;;
+            dev) [[ "$HEAD_REF" == test && "$HEAD_REPO" == "$GITHUB_REPOSITORY" ]] ;;
+            main) [[ "$HEAD_REF" == dev && "$HEAD_REPO" == "$GITHUB_REPOSITORY" ]] ;;
+            *) exit 1 ;;
+          esac
