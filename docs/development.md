@@ -1,23 +1,21 @@
 # Development
 
-Daily policy: use `dev`, run `make lint`, inspect the staged diff, then explicitly
-`git push origin dev`. `main` and `test` are preserved. Test, typecheck, build,
-coverage and full acceptance commands below are manual. New manual Actions in
-`dev` may require a later authorized default-branch activation.
-
 This repository owns the `pokerlost-community` documentation bundle. Use Git, Make,
-Docker and Buildx from its exact root; no application SDK or runtime is required.
+Docker/Buildx, Node 24 and npm from its exact root; no application SDK or runtime is required.
 
 ```bash
 make help
+make check
+make protocol-test
 make version
 make ci-local
 make coverage
 make release-check
 ```
 
-`check` runs the existing whitespace, Markdown and local-link acceptance once;
-`test` selects the same applicable suite. `build` creates a deterministic source
+`check` runs whitespace, Markdown/local-link acceptance and offline protocol regressions;
+`test` selects the documentation suite; `protocol-test` selects release/promotion regressions and writes measured Node coverage
+to `coverage/protocol.lcov`. Prose coverage remains not applicable. `build` creates a deterministic source
 archive in ignored `dist/`; `verify` compares its inventory and bytes with current
 source. There is no product runtime or runtime image. Coverage is explicitly not
 applicable to prose; measured coverage in other projects remains advisory below
@@ -25,12 +23,11 @@ applicable to prose; measured coverage in other projects remains advisory below
 
 `ci-local` preserves source commit, dirty state, content identity, commands, tool
 versions, exit codes and artifact hashes in ignored `coverage/`. Hosted CI calls
-the same entrypoint. These reports stay local; no new artifact-upload workflow is
-configured. The first locked tool image build may need network access. After
+the same entrypoint. These reports stay local; releases publish only the checked source bundle and its manifest/checksums. The first locked tool image build may need network access. After
 preparing the exact image and inputs, `make ci-local OFFLINE=1` checks that cache
 before running without network; missing or changed inputs are blocked.
 
 The shared Make/source/receipt helpers belong to pythonTemplate. Refresh their
 reviewed snapshots through its engineering updater and record the exact source;
 do not create a parallel runner here. See [versioning](versioning.md) and
-[release](release-guide.md) before changing the bundle contract.
+[release](release_guide.md) before changing the bundle contract.
