@@ -1,6 +1,6 @@
 # Public organization profile
 
-Read selected [baseRules](https://raw.githubusercontent.com/serrja/baseRules/8434509933feaa71ba312f8d02caad7362766d5a/docs/engineering.md), then [Pokerlost norms](https://raw.githubusercontent.com/pokerlost/projectRules/4785546cffa58f7ae1c22b6d6b8846a0141793eb/docs/project.md) before the local contract below.
+Read selected [baseRules](https://raw.githubusercontent.com/serrja/baseRules/8434509933feaa71ba312f8d02caad7362766d5a/docs/engineering.md), then [Pokerlost norms](https://raw.githubusercontent.com/pokerlost/projectRules/537da92f8e22f35355a96f868d1b98d83e066c75/docs/project.md) before the local contract below.
 These full-SHA links are reading sources, not automatic loaders or grants. Review
 the source diff, update the explicit pin and run docs checks for a rules refresh.
 Local overrides apply only to this repository's stated ownership boundary.
