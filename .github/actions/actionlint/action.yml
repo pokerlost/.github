@@ -19,4 +19,6 @@ runs:
           --output "$tool_dir/archive.tar.gz"
         printf '%s  %s\n' '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' "$tool_dir/archive.tar.gz" | sha256sum --check
         tar --extract --gzip --file "$tool_dir/archive.tar.gz" --directory "$tool_dir" actionlint
-        "$tool_dir/actionlint" .github/workflows/*.yml
+        node scripts/check_concurrency.mjs
+        printf '%s\n' 'actionlint 1.7.12 does not parse queue:max; the explicit extension check above owns only that key.'
+        "$tool_dir/actionlint" -ignore 'unexpected key "queue" for "concurrency" section' .github/workflows/*.yml

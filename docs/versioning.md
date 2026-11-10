@@ -1,18 +1,17 @@
-# Versioning
+# 🏷️ Versioning
 
-[VERSION](../VERSION) is the only version source for the `pokerlost-community` bundle.
-It is independent of application versions and other documentation repositories.
-Markdown, assets, community files and configuration schemas belong to the bundle
-and its Git snapshot; individual pages and images have no separate runtime version.
+[VERSION](../VERSION) is the independent native source for the `pokerlost-community`
+documentation bundle. Individual pages and assets have no separate runtime version.
 
-Use patch increments for compatible corrections, minor increments for compatible
-new guidance, and major increments for incompatible public contract changes after
-1.0. During 0.x, an incompatible contract change requires a minor increment and a
-migration note. Prerelease candidates use PEP 440 `rcN` or `.devN`; the native
-shared checker validates the version. Keep any explicit schema version tied to
-its actual serialization contract, not routine text edits.
+## 📦 Mapping
 
-`make version` reads VERSION. `make release-check` checks the built archive's
-source identity, inventory and version without publishing. A release tag is one
-new annotated `v<version>` at a clean, reviewed and checked main commit. Never
-move a published tag. See [release workflow](release-guide.md).
+Native and GitHub versions use SemVer: `X.Y.Z-dev.N` for dev and `X.Y.Z` for main;
+tags prepend `v`. The publisher derives the next version from immutable allocations,
+stable history and this native target. An unchanged target defaults to the next patch
+after stable, including documentation-only pushes. Set a higher native target in the
+reviewed change to express feature/breaking intent; explain migration consequences.
+
+Version injection happens only in an isolated export of the exact event SHA. The
+bundle's VERSION and release manifest must agree; no release commit is pushed back.
+Old tags are preserved. `make version` reads source metadata and `make release-check`
+validates the local native archive without publishing. See [protocol](release_protocol.md).

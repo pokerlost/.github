@@ -1,0 +1,65 @@
+name: Reusable exact-event release
+on:
+  workflow_call:
+    inputs:
+      provider-ref:
+        description: Reviewed full SHA of pokerlost/.github, identical to the workflow pin.
+        required: true
+        type: string
+      native-adapter:
+        description: version-file or npm; no commands or lifecycle hooks are executed.
+        required: true
+        type: string
+      bundle-name:
+        description: Public-safe lowercase artifact basename.
+        required: true
+        type: string
+      source-workflow:
+        description: Caller workflow path, including .github/workflows/.
+        required: true
+        type: string
+      gate-name:
+        description: Exact successful native check job name from this original run.
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'main')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    concurrency:
+      group: release-allocation
+      queue: max
+    steps:
+      - name: Require an immutable provider pin
+        env:
+          PROVIDER_REF: ${{ inputs.provider-ref }}
+        run: '[[ "$PROVIDER_REF" =~ ^[a-f0-9]{40}$ ]]'
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: pokerlost/.github
+          ref: ${{ inputs.provider-ref }}
+          path: provider
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.22.0
+      - name: Publish checked original event
+        working-directory: source
+        run: node ../provider/scripts/publish.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ADAPTER: ${{ inputs.native-adapter }}
+          RELEASE_BUNDLE_NAME: ${{ inputs.bundle-name }}
+          RELEASE_WORKFLOW: ${{ inputs.source-workflow }}
+          RELEASE_GATE: ${{ inputs.gate-name }}

@@ -12,15 +12,21 @@ VERIFY_COMMAND = $(QUALITY_RUN) python docker/release.py bundle-verify --name $(
 IMAGE_COMMAND = printf "%s\n" "notApplicable: no runtime image"
 OFFLINE_PREFLIGHT_COMMAND = true
 include docker/quality.mk
+.PHONY: protocol-test
+protocol-test:
+	@mkdir -p coverage
+	node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/protocol.lcov scripts/*.test.mjs
+check: protocol-test
 else
 .PHONY: help lint typecheck test check
 help:
 	@printf '%s\n' 'Native documentation checks: lint test check; Docker owns bundle verification.'
 lint:
 	git -c safe.directory=/app diff --check HEAD -- .
-	python tools/check_documentation.py --documents README.md profile/README.md CONTRIBUTING.md SECURITY.md SUPPORT.md docs/development.md docs/versioning.md docs/release-guide.md CHANGELOG.md
+	python tools/check_documentation.py --documents README.md profile/README.md CONTRIBUTING.md SECURITY.md SUPPORT.md docs/development.md docs/versioning.md docs/release_guide.md docs/release_protocol.md CHANGELOG.md
 typecheck:
 	@printf '%s\n' 'notApplicable: no product type system'
 test: lint
+	python tools/test_bundle_version.py
 check: test
 endif
