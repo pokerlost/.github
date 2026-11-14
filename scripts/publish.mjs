@@ -13,12 +13,12 @@ const adapter = process.env.RELEASE_ADAPTER ?? "version-file";
 const bundleName = process.env.RELEASE_BUNDLE_NAME ?? "pokerlost-community";
 const prefix = `repos/${repository}`;
 const command = (name, args, options = {}) => execFileSync(name, args, { encoding: "utf8", stdio: ["pipe", "pipe", "inherit"], ...options }).trim();
-function api(path, data) {
+export function api(path, data) {
   const args = ["api", "--hostname", "github.com", `${prefix}/${path}`];
   if (data) args.push("--method", "POST", "--input", "-");
   return JSON.parse(command("gh", args, data ? { input: JSON.stringify(data) } : {}));
 }
-function pages(path) {
+export function pages(path) {
   return JSON.parse(command("gh", ["api", "--hostname", "github.com", `${prefix}/${path}`, "--paginate", "--slurp"])).flat();
 }
 export function configuration() { return { repository, workflow, gate, adapter, bundleName }; }
@@ -109,7 +109,7 @@ export function validateAllocation(allocation, event, target, expected = configu
   assert.ok(version, "Invalid allocated version");
   assert.equal(version[3] !== null, event.branch === "dev", "Release channel conflict");
 }
-function allocations() {
+export function allocations() {
   const tags = pages("git/matching-refs/tags/v");
   return tags.map((tag) => {
     if (tag.object.type !== "tag") return { tag: tag.ref.slice(10) };
@@ -134,6 +134,25 @@ export function shouldBeLatest(allocation, releases) {
     return BigInt(previous.runId) > BigInt(allocation.runId);
   });
 }
+// All adapters share this tag ledger and nextVersion resolver. Call only while
+// holding the consumer repository's release-allocation concurrency group.
+export function allocateEvent(event, expected, native, validate, extra = () => ({})) {
+  const records = allocations();
+  const matching = records.filter((row) => row.allocation?.runId === event.runId);
+  assert.ok(matching.length <= 1, "Duplicate event allocation");
+  if (matching.length) {
+    validate(matching[0].allocation, event, matching[0].target, expected);
+    assert.equal(matching[0].tag, `v${matching[0].allocation.version}`, "Tag/version conflict");
+    return matching[0].allocation;
+  }
+  const version = nextVersion(records.map((row) => row.tag), native, event.branch);
+  const allocation = { schemaVersion: 1, repository: expected.repository, adapter: expected.adapter, bundleName: expected.bundleName, workflow: expected.workflow, gate: expected.gate, ...event, version, ...extra(version) };
+  validate(allocation, event, event.sha, expected);
+  const tag = `v${version}`;
+  const object = api("git/tags", { tag, message: JSON.stringify(allocation), object: event.sha, type: "commit" });
+  api("git/refs", { ref: `refs/tags/${tag}`, sha: object.sha });
+  return allocation;
+}
 export function publish(event) {
   validateConfiguration();
   const run = api(`actions/runs/${event.runId}`);
@@ -146,20 +165,7 @@ export function publish(event) {
   // This endpoint has an object envelope rather than a list.
   const checked = jobs.flatMap((page) => page.jobs ?? []);
   assert.ok(checked.some((job) => job.name === gate && job.conclusion === "success"), "Native gate has not passed for this event");
-  const records = allocations();
-  const matching = records.filter((row) => row.allocation?.runId === event.runId);
-  assert.ok(matching.length <= 1, "Duplicate event allocation");
-  let allocation = matching[0]?.allocation;
-  if (allocation) {
-    validateAllocation(allocation, event, matching[0].target);
-    assert.equal(matching[0].tag, `v${allocation.version}`, "Tag/version conflict");
-  } else {
-    const native = nativeVersion();
-    allocation = { schemaVersion: 1, repository, adapter, bundleName, workflow, gate, ...event, version: nextVersion(records.map((row) => row.tag), native, event.branch) };
-    const tag = `v${allocation.version}`;
-    const object = api("git/tags", { tag, message: JSON.stringify(allocation), object: event.sha, type: "commit" });
-    api("git/refs", { ref: `refs/tags/${tag}`, sha: object.sha });
-  }
+  const allocation = allocateEvent(event, configuration(), nativeVersion(), validateAllocation);
   const tag = `v${allocation.version}`;
   const releases = pages("releases?per_page=100");
   const existing = releases.find((release) => release.tag_name === tag);
