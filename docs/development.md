@@ -1,7 +1,16 @@
 # Development
 
 This repository owns the `pokerlost-community` documentation bundle. Use Git, Make,
-Docker/Buildx, Node 24 and npm from its exact root; no application SDK or runtime is required.
+Docker/Buildx, Node 24, npm and Python 3.12+ from its exact root. The Python fixture
+toolchain builds real wheel/sdist regressions; hosted CI prepares the same hash-locked
+dependencies. Prepare an isolated local environment before the checks:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: \
+  -r scripts/python-test-requirements.txt
+export PATH="$PWD/.venv/bin:$PATH"
+```
 
 ```bash
 make help

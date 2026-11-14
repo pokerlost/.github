@@ -63,13 +63,20 @@ repository. A successful actual private caller remains a separate acceptance con
 | This community bundle | `VERSION` | `version-file`: isolated source tar with injected VERSION | Implemented; offline regression |
 | projectRules policy bundle | `package.json` plus npm lock | `npm`: isolated version injection and `npm pack --ignore-scripts --offline` | Implemented; offline regression |
 | baseRules documentation | Its `package.json` and lock | Independently owned native npm pipeline | Existing upstream; no automatic caller migration |
-| Python wheels/sdist | Producer's declared `pyproject.toml` backend | PEP 440 `X.Y.Z.devN` mapping plus metadata smoke | Producer adapter required; unsupported here |
+| Python wheels/sdist | Producer's declared `pyproject.toml` backend | Typed allocation → unprivileged consumer build → verified publication | Provider implemented; G01 native adoption and hosted acceptance pending |
 | C++/Flutter/Vue/Helm products | Producer's native source | Tested external injection/build adapter | Producer contract required; unsupported here |
 
 Unsupported adapters fail before tag allocation. Never rename a wheel or image to
 pretend its embedded version changed. Native validation/build commands stay in the
 consumer; this provider executes no npm lifecycle or consumer-supplied shell commands
 with a write token. It creates GitHub Releases, not registry publications or deployments.
+
+Python uses the separate [h02-python/v1 contract](python_release_contract.md):
+`python-allocate.yml` records the shared allocator's version before the consumer's
+native build, and `python-publish.yml` verifies exact wheel/sdist bytes, signed
+provenance and native receipts before publication. Existing `release.yml` inputs,
+VERSION/npm schema 1 manifests and callers remain unchanged. Python callers must
+not pass `native-adapter: python` to that legacy one-phase workflow.
 
 Versions are independent per repository. Stable tags are `vX.Y.Z`; prerelease tags are
 `vX.Y.Z-dev.N`. Resolution uses recorded allocations, existing stable tags and the
