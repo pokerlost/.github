@@ -23,7 +23,7 @@ help:
 	@printf '%s\n' 'Native documentation checks: lint test check; Docker owns bundle verification.'
 lint:
 	git -c safe.directory=/app diff --check HEAD -- .
-	python tools/check_documentation.py --documents README.md profile/README.md CONTRIBUTING.md SECURITY.md SUPPORT.md docs/development.md docs/versioning.md docs/release_guide.md docs/release_protocol.md CHANGELOG.md
+	python tools/check_documentation.py --documents README.md profile/README.md CONTRIBUTING.md SECURITY.md SUPPORT.md docs/development.md docs/versioning.md docs/release_guide.md docs/release_protocol.md docs/python_release_contract.md CHANGELOG.md
 typecheck:
 	@printf '%s\n' 'notApplicable: no product type system'
 test: lint

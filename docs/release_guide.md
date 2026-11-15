@@ -24,3 +24,8 @@ original source run shown in its output. Preserve the recorded allocation. A fai
 identity conflict or unavailable protection blocks that delivery step. There is no
 production deployment or registry publication in this DAG. Keep valuable release notes
 and old immutable source links when updating guidance.
+
+Python consumers use the [typed Python contract](python_release_contract.md) and
+rerun the full original run. Allocation outputs select the original verified build
+for partial-draft recovery; completed releases are audited from their saved signed
+assets. Missing native build/injection or a failed gate blocks publication.
