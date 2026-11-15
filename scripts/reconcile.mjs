@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configuration, validateAllocation, validateConfiguration, validateEvent } from "./publish.mjs";
+import { reconcilePython } from "./python_release.mjs";
 
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 export function verifyRelease(run, repository, release, tag, metadata, expected = configuration()) {
@@ -47,6 +48,7 @@ export function verifyRelease(run, repository, release, tag, metadata, expected 
 }
 export function reconcile(since) {
   const expected = configuration();
+  if (expected.adapter === "python") return reconcilePython(since);
   validateConfiguration(expected);
   const { repository, workflow } = expected;
   assert.ok(since && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(since) && Number.isFinite(Date.parse(since)), "Provide the actual bootstrap UTC timestamp");
