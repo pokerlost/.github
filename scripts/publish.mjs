@@ -12,7 +12,7 @@ const gate = process.env.RELEASE_GATE ?? "validate";
 const adapter = process.env.RELEASE_ADAPTER ?? "version-file";
 const bundleName = process.env.RELEASE_BUNDLE_NAME ?? "pokerlost-community";
 const prefix = `repos/${repository}`;
-const command = (name, args, options = {}) => execFileSync(name, args, { encoding: "utf8", stdio: ["pipe", "pipe", "inherit"], ...options }).trim();
+const command = (name, args, options = {}) => execFileSync(name, args, { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, stdio: ["pipe", "pipe", "inherit"], ...options }).trim();
 export function api(path, data) {
   const args = ["api", "--hostname", "github.com", `${prefix}/${path}`];
   if (data) args.push("--method", "POST", "--input", "-");
